@@ -50,6 +50,9 @@ jobs:
       username: ${{ secrets.DOCKER_USERNAME }}
       password: ${{ secrets.DOCKER_PASSWORD }}
 
+   - name: Set up QEMU
+     uses: docker/setup-qemu-action@v3
+
    - name: Build & Publish dev on DockerHub
      uses: docker/build-push-action@v5
      with:
@@ -57,3 +60,4 @@ jobs:
       tags: inrix/floatplane-downloader:dev
       cache-from: type=gha
       cache-to: type=gha,mode=max
+      platforms: linux/amd64,linux/arm64
