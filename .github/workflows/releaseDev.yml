@@ -18,6 +18,8 @@ jobs:
   name: Release dev build on GitHub
   needs: Build
   runs-on: ubuntu-latest
+  permissions:
+   contents: write
 
   steps:
    - name: Download All Artifacts
@@ -27,13 +29,16 @@ jobs:
       merge-multiple: true
 
    - name: Publish dev release on GitHub
-     uses: marvinpinto/action-automatic-releases@latest
-     with:
-      repo_token: ${{ secrets.GITHUB_TOKEN }}
-      automatic_release_tag: dev
-      prerelease: true
-      title: Latest
-      files: build/*
+     env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     run: |
+      gh release delete dev --yes || true
+      gh release create dev \
+       --repo="${{ github.repository }}" \
+       --title="Latest Dev Build" \
+       --notes="Automated dev build from commit ${{ github.sha }}" \
+       --prerelease \
+       build/*
 
  GitHub-Container-Registry:
   name: Publish dev build to GitHub Container Registry
@@ -58,7 +63,7 @@ jobs:
      uses: docker/build-push-action@v5
      with:
       push: true
-      tags: ghcr.io/${{ github.repository }}:dev
+      tags: ghcr.io/${{ github.repository_owner }}/floatplane-downloader:dev
       cache-from: type=gha
       cache-to: type=gha,mode=max
       platforms: linux/amd64,linux/arm64
