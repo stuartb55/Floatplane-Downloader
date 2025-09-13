@@ -18,6 +18,8 @@ jobs:
   name: Draft latest release on GitHub
   needs: Build
   runs-on: ubuntu-latest
+  permissions:
+   contents: write
 
   steps:
    - name: Download All Artifacts
@@ -27,13 +29,16 @@ jobs:
       merge-multiple: true
 
    - name: Publish latest draft release on GitHub
-     uses: marvinpinto/action-automatic-releases@latest
-     with:
-      repo_token: ${{ secrets.GITHUB_TOKEN }}
-      automatic_release_tag: latest
-      draft: true
-      title: Latest Release
-      files: build/*
+     env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     run: |
+      gh release delete latest --yes || true
+      gh release create latest \
+       --repo="${{ github.repository }}" \
+       --title="Latest Release" \
+       --generate-notes \
+       --draft \
+       build/*
 
  GitHub-Container-Registry:
   name: Publish latest build to GitHub Container Registry
@@ -58,7 +63,7 @@ jobs:
      uses: docker/build-push-action@v5
      with:
       push: true
-      tags: ghcr.io/${{ github.repository }}:latest
+      tags: ghcr.io/${{ github.repository_owner }}/floatplane-downloader:latest
       cache-from: type=gha
       cache-to: type=gha,mode=max
       platforms: linux/amd64,linux/arm64
